@@ -20,3 +20,7 @@ mt
 plot(denmt)
 distmt
 
+cmat
+points(cx, cy, col = c("red", "orange", "purple"), pch = 3, cex = 2, lwd = 2)
+mdist(x,y,cx,cy)
+apply(distTmp, 2, which.min)
