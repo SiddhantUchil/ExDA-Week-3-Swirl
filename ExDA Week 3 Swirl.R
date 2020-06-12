@@ -94,6 +94,10 @@ myImage(svd1$u[,1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[,1:10]))
 
 
 
+dim(ssd)
+
+
+
 
 
 
