@@ -97,19 +97,144 @@ myImage(svd1$u[,1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[,1:10]))
 dim(ssd)
 names(ssd)[562:563]
 names(ssd[562:563])
+table(ssd$subject)
+sum(table(ssd$subject))
+table(ssd$activity)
+sum(table(ssd$activity))
+
+sub1 <- subset(ssd, subject == 1)
+dim(sub1)
+names(sub1[, 1:12])
+
+myedit("showXY.R")
+par(mfrow=c(1, 2), mar = c(5, 4, 1, 1))
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[, 2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright",legend=unique(sub1$activity),col=unique(sub1$activity), pch = 1)
+par(mfrow=c(1,1))
+##the code of showXY.R
 
 
+showMe(1:6)
+
+library(fields)
+
+# For compatibility with 2.2.21
+.get_course_path <- function(){
+  tryCatch(swirl:::swirl_courses_dir(),
+           error = function(c) {file.path(find.package("swirl"),"Courses")}
+  )
+}
+
+# Put initialization code in this file.
+path_to_course <- file.path(.get_course_path(),
+                            "Exploratory_Data_Analysis","Clustering_Example")
+try(dev.off(),silent=TRUE)
+plot.new()
+
+pathtofile <- function(fileName){
+  mypath <- file.path(.get_course_path(),
+                      "Exploratory_Data_Analysis","Clustering_Example",
+                      fileName)
+}
+fxfer <- function(fileName){
+  mypath <- pathtofile(fileName)
+  file.copy(mypath,fileName)
+}
+
+myImage <- function(iname){
+  par(mfrow=c(1,1))
+  par(mar=c(8,10,8,10))
+  image(t(iname)[,nrow(iname):1])
+}
+myedit <- function(fname){
+  #fxfer(fname)
+  #file.edit(fname)
+  mypath <- pathtofile(fname)
+  file.edit(mypath)
+}
+
+mdist <- function(x,y,cx,cy){
+  distTmp <- matrix(NA,nrow=3,ncol=12)
+  distTmp[1,] <- (x-cx[1])^2 + (y-cy[1])^2
+  distTmp[2,] <- (x-cx[2])^2 + (y-cy[2])^2
+  distTmp[3,] <- (x-cx[3])^2 + (y-cy[3])^2  
+  return(distTmp)
+}
+
+showMe <- function(cv){
+  myarg <- deparse(substitute(cv))
+  z<- outer( 1:20,1:20, "+")
+  obj<- list( x=1:20,y=1:20,z=z )
+  image(obj, col=cv, main=myarg  )
+}
+load(pathtofile("samsungData.rda"))
+set.seed(1234);
+par(mfrow=c(1, 2), mar = c(5, 4, 1, 1))
+ssd <- transform(samsungData, activity = factor(activity))
+source(pathtofile("myplclust.R"),local=TRUE)
+
+##the above are the codes used in the global functions
+
+mdist <- dist(sub1[, 1:3])
+hclustering <- hclust(mdist)
+
+myplclust <- function( hclust, lab=hclust$labels, lab.col=rep(1,length(hclust$labels)), hang=0.1,...){
+  ## modifiction of plclust for plotting hclust objects *in colour*!
+  ## Copyright Eva KF Chan 2009
+  ## Arguments:
+  ##    hclust:    hclust object
+  ##    lab:        a character vector of labels of the leaves of the tree
+  ##    lab.col:    colour for the labels; NA=default device foreground colour
+  ##    hang:     as in hclust & plclust
+  ## Side effect:
+  ##    A display of hierarchical cluster with coloured leaf labels.
+  y <- rep(hclust$height,2)
+  x <- as.numeric(hclust$merge)
+  y <- y[which(x<0)]
+  x <- x[which(x<0)]
+  x <- abs(x)
+  y <- y[order(x)]
+  x <- x[order(x)]
+  plot( hclust, labels=FALSE, hang=hang, ... )
+  text( x=x, y=y[hclust$order]-(max(hclust$height)*hang), labels=lab[hclust$order], col=lab.col[hclust$order], srt=90, adj=c(1,0.5), xpd=NA, ... )}
+
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+mdist <- dist(sub1[,10:12])
+hclustering <- hclust(mdist)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+svd1 <- svd(scale(sub1[,-c(562,563)]))
+
+?scale()
+##scale performs centering on each column.
+##centering means subtracting the mean value of the column from every element in the column
+
+dim(svd1$u)
 
 
+maxCon <- which.max(svd1$v[,2])
+mdist <- dist(c(sub1[, 10:12], maxCon))
+mdist <- dist(sub1[,c(10:12,maxCon)])
+hclustering <- hclust(mdist)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+names(sub1[maxCon])
 
+kClust <- kmeans(sub1[, -c(562, 562)], centers = 6)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6)
+table(kClust$cluster, sub1$activity)
+kClust <- kmeans(sub1[, -c(562, 562)], centers = 6, nstart = 100)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
 
+dim(kClust$centers)
+laying <- which(kClust$size == 29)
+plot(kClust$centers[laying,1:12], pch = 19, ylab = "Laying Cluster")
+names(sub1[1:3])
 
-
-
-
-
-
-
+walkdown <- which(kClust$size==49)
+plot(kClust$centers[walkdown, 1:12],pch=19,ylab="Walkdown Cluster")
 
 
 
